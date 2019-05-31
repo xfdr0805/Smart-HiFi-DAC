@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="bootstrap.css">
+    <title>Smart HiFi DAC</title>
+    <style>
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            /* Set the fixed height of the footer here */
+            line-height: 60px;
+            /* Vertically center the text there */
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid" style="margin-right: 50px">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#" style="color: darkcyan">Smart HiFi DAC</a>
+            </div>
+            <div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="nav-item">
+                        <a class="active" href="/index.html">Info</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/setup.html">Setup</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/control.html">Control</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/login.html">Logout</a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <h3 style="text-align:center;color: dodgerblue">System Info</h3>
+    <table class="table table-bordered" style="width:600px;margin:0 auto">
+        <tbody>
+            <tr>
+                <td style="width:150px;">
+                    <span>Mode:</span>
+                </td>
+                <td>
+                    <span id="mode"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="width:150px;">
+                    <span>IP Address:</span>
+                </td>
+                <td>
+                    <span id="ip"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="width:150px;">
+                    <span>Sub Mask:</span>
+                </td>
+                <td>
+                    <span id="mask"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="width:150px;">
+                    <span>GateWay:</span>
+                </td>
+                <td>
+                    <span id="gateway"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="width:150px;">
+                    <span>DNS:</span>
+                </td>
+                <td>
+                    <span id="dns"></span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <h3 style="text-align:center;color: dodgerblue">DateTime</h3>
+    <table class="table table-bordered" style="width:600px;margin:0 auto">
+        <tbody>
+            <tr>
+                <td style="width:150px;">
+                    <span>System Time:</span>
+                </td>
+                <td>
+                    <span id="time"></span>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td style="width:150px;">
+                    <span>System Temp:</span>
+                </td>
+                <td>
+                    <span id="temp"></span>
+                </td>
+            </tr> -->
+            <tr>
+                <td style="width:150px;">
+                    <span>NTP Server:</span>
+                </td>
+                <td>
+                    <span id="server"></span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <footer class="footer">
+        <div class="container">
+            <div style="text-align: center">Copyright ©2017-2018 Suzhou All Rights Reserved.</div>
+        </div>
+    </footer>
+    <script src="zepto.js"></script>
+</body>
+
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            type: 'POST',
+            url: "get_info",
+            data: "",
+            dataType: 'json',
+            success: function (data) {
+                $("#mode").text(data.mode);
+                $("#ip").text(data.ip);
+                $("#mask").text(data.mask);
+                $("#gateway").text(data.gateway);
+                $("#dns").text(data.dns);
+                $("#time").text(data.rtc_time);
+                $("#server").text(data.ntp_server);
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+            },
+        });
+    });
+    setInterval(function () {
+        $.ajax({
+            type: 'POST',
+            url: "get_time",
+            data: "",
+            dataType: 'json',
+            success: function (data) {
+                $("#time").text(data.rtc_time);
+                $("#temp").text(data.temp + ' ℃');
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+            },
+        });
+    }, 1000);
+</script>
+</body>
+
+</html>

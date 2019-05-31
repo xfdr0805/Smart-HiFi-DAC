@@ -242,7 +242,7 @@ void handler_key(Button2 &btn)
   {
   case SINGLE_CLICK:
     page_index++;
-    if (page_index == 2)
+    if (page_index == 2) //按一下进入菜单，再按一下退出菜单
     {
       if (input_index <= 4)
       {
@@ -285,9 +285,12 @@ void IntCallback()
   printf("CS8422 Receiver Status:0x%X\n", get_receiver_status());
   printf("CS8422 Receiver Error:0x%X\r\n", get_error_status());
   printf("CS8422 Interrupt Status:0x%X\r\n", get_interrupt_status());
-  u8g2.setCursor(86, 14);
-  u8g2.print(get_receiver_status() & 0x10 ? "locked" : "nolock");
-  u8g2.sendBuffer();
+  if (page_index == 0)
+  {
+    u8g2.setCursor(86, 14);
+    u8g2.print(get_receiver_status() & 0x10 ? "locked" : "nolock");
+    u8g2.sendBuffer();
+  }
 }
 void setup()
 {
@@ -403,7 +406,7 @@ void setup()
     AsyncJsonResponse *response = new AsyncJsonResponse();
     response->addHeader("Server", "ESP Async Web Server");
     JsonObject &root = response->getRoot();
-    root["time"] = "2019/05/30 12：00：00";
+    root["rtc_time"] = "2019/05/30 12：00：00";
     root["temp"] = "20度";
     response->setLength();
     request->send(response);

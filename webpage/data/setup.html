@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="bootstrap.css">
+    <title>Smart HiFi DAC</title>
+    <style>
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            /* Set the fixed height of the footer here */
+            line-height: 60px;
+            /* Vertically center the text there */
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+    <div></div>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid" style="margin-right: 50px">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#" style="color: darkcyan">Smart HiFi DAC</a>
+            </div>
+            <div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="nav-item">
+                        <a class="active" href="/index.html">Index</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/setup.html">Setup</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/control.html">Control</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/login.html">Logout</a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <h3 style="text-align:center;color: dodgerblue">System Setup</h3>
+    <div class="container" style="width:600px;">
+        <strong>Internet</strong>
+        <hr>
+        <form>
+            <div class="form-group row">
+                <label for="mode" class="col-sm-2 col-form-label">Mode:</label>
+                <div class="col-sm-8">
+                    <select class="form-control" id="mode">
+                        <option value="static">Static</option>
+                        <option value="dhcp">DHCP</option>
+                    </select>
+                </div>
+            </div>
+            <div id="static_ip">
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-2 col-form-label">IP:</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="ip" placeholder="">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="mask" class="col-sm-2 col-form-label">Mask:</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="mask" placeholder="">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="gateway" class="col-sm-2 col-form-label">Gateway:</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="gateway" placeholder="">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="dns" class="col-sm-2 col-form-label">DNS:</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="dns" placeholder="">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="dns" class="col-sm-2 col-form-label"></label>
+                <div class="col-sm-8">
+                    <button type="button" class="btn btn-primary" id="submit">Submit</button>
+                    <a type="button" class="btn btn-danger" style="margin-left: 100px" id="restart">Restart</a>
+                </div>
+            </div>
+            <br>
+            <strong>Time</strong>
+            <hr>
+            <div class="form-group row">
+                <label for="dns" class="col-sm-2 col-form-label">RTC:</label>
+                <div class="col-sm-6">
+                    <label class="col-form-label">
+                        <span id="time"></span>
+                    </label>
+                </div>
+                <a type="button" class="btn btn-warning" id="ntp">NTP Time</a>
+
+            </div>
+            <div class="form-group row">
+                <label for="dns" class="col-sm-2 col-form-label">Server:</label>
+                <div class="col-sm-6">
+                    <input type="text" class="form-control" id="server">
+                </div>
+                <a type="button" class="btn btn-primary" id="btn_server">&nbsp;&nbsp;Submit&nbsp;&nbsp;&nbsp;</a>
+            </div>
+            <strong>Account</strong>
+            <hr>
+            <div>
+                <div class="form-group row">
+                    <label for="mask" class="col-sm-4 col-form-label">Old Passsword:</label>
+                    <div class="col-sm-6">
+                        <input type="password" class="form-control" id="pwd_old" placeholder="old password">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="mask" class="col-sm-4 col-form-label">User Name:</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" id="username" placeholder="username">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="mask" class="col-sm-4 col-form-label">Passsword:</label>
+                    <div class="col-sm-6">
+                        <input type="password" class="form-control" id="pwd_new1" placeholder="new password">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label for="gateway" class="col-sm-4 col-form-label">Confirm:</label>
+                    <div class="col-sm-6">
+                        <input type="password" class="form-control" id="pwd_new2" placeholder="confirm password">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="dns" class="col-sm-4 col-form-label"></label>
+                    <div class="col-sm-3">
+                        <!-- <button type="button" class="btn btn-primary" id="submit">Submit</button> -->
+                        <a type="button" class="btn btn-info" id="confirm">Confirm</a>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="form-group row">
+                <label for="dns" class="col-sm-2 col-form-label">NTP:</label>
+                <div class="col-sm-8">
+                    <label class="col-form-label">
+                        <span id="ntp_time"></span>
+                    </label>
+                </div>
+            </div> -->
+        </form>
+    </div>
+    <div style="height: 60px;"></div>
+    <footer class="footer">
+        <div class="container">
+            <div style="text-align: center">Copyright ©2017-2019 Suzhou All Rights Reserved.</div>
+        </div>
+    </footer>
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="zepto.js"></script>
+</body>
+
+<script>
+    var cnt_rtc = 0;
+    var cnt_ntp = 0;
+    $(document).ready(function () {
+        $.ajax({
+            type: 'POST',
+            url: "get_info",
+            data: "",
+            dataType: 'json',
+            success: function (data) {
+                var mode = data.mode;
+                $("#ip").val(data.ip);
+                $("#mask").val(data.mask);
+                $("#gateway").val(data.gateway);
+                $("#dns").val(data.dns);
+                $("#time").text(data.rtc_time);
+                $("#server").val(data.ntp_server);
+                $("#mode").val(mode);
+                if (mode == "dhcp") {
+                    $('#static_ip').hide();
+                } else {
+                    $('#static_ip').show();
+                }
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+            },
+        });
+    });
+    $("#mode").change(function () {
+        var mode = $("#mode").val();
+        console.log(mode);
+        if (mode == "dhcp") {
+            $('#static_ip').hide();
+        } else {
+            $('#static_ip').show();
+        }
+    });
+    $('#submit').click(function () {
+        var mode = $("#mode").val();
+        var ip = $("#ip").val().split('.');
+        var mask = $("#mask").val().split('.');
+        var gateway = $("#gateway").val().split('.');
+        var dns = $("#dns").val().split('.');
+        for (var i = 0; i < 4; i++) {
+            ip[i] = parseInt(ip[i]);
+            mask[i] = parseInt(mask[i]);
+            gateway[i] = parseInt(gateway[i]);
+            dns[i] = parseInt(dns[i]);
+        }
+        var data_static = JSON.stringify({
+            'mode': 'static',
+            'ip': ip,
+            'mask': mask,
+            'gateway': gateway,
+            'dns': dns
+        });
+        var data_dhcp = JSON.stringify({
+            'mode': 'dhcp'
+        });
+        var data_send = '';
+        if (mode == "dhcp") {
+            data_send = data_dhcp;
+        } else {
+            data_send = data_static;
+        }
+        $.ajax({
+            type: 'POST',
+            url: "ethernet_set",
+            data: data_send,
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == 'success') {
+                    alert("Success");
+                }
+
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+                alert("Failed");
+            },
+        });
+    });
+    $('#restart').click(function () {
+        $.ajax({
+            type: 'POST',
+            url: "reset_cpu",
+            data: JSON.stringify({
+                "cmd": "restart"
+            }),
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == 'success') {
+                    alert("Success");
+                }
+
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+                alert("Failed");
+            },
+        });
+    });
+    $('#btn_server').click(function () {
+        $.ajax({
+            type: 'POST',
+            url: "ntp_server",
+            data: JSON.stringify({
+                "server": $('#server').val()
+            }),
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == 'success') {
+                    alert("Success");
+                }
+
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+                alert("Failed");
+            },
+        });
+    });
+    $('#confirm').click(function () {
+        var pwd_old = $("#pwd_old").val();
+        var pwd1 = $("#pwd_new1").val();
+        var pwd2 = $("#pwd_new2").val();
+        var username = $("#username").val();
+        if (pwd1 != pwd2) {
+
+            alert("Your passwords do not match. Please re-enter the password!");
+            return;
+        } else if (username == "") {
+            alert("Please input username!");
+            return;
+        }
+        $.ajax({
+            type: 'POST',
+            url: "change_pwd",
+            data: JSON.stringify({
+                "pwd_old": pwd_old,
+                "username": username,
+                "password": pwd1,
+            }),
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == 'success') {
+                    alert("Success");
+                } else {
+                    alert(data.status);
+                }
+
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+                alert("Failed");
+            },
+        });
+    });
+    $('#ntp').click(function () {
+        $.ajax({
+            type: 'POST',
+            url: "get_ntp_time",
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == 'success') {
+                    alert("Success");
+                }
+
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+                alert("Failed");
+            },
+        });
+    });
+    setInterval(function () {
+        $.ajax({
+            type: 'POST',
+            url: "get_time",
+            data: "",
+            dataType: 'json',
+            success: function (data) {
+                $("#time").text(data.rtc_time);
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+            },
+        });
+    }, 1000);
+</script>
+</body>
+
+</html>
