@@ -15,7 +15,7 @@
 #include <IRutils.h>
 #include <cs8422.h>
 #define MAX_VOLUME 100
-#define MAX_MENU 8
+#define MAX_MENU 9
 #define LED_BUILD 2
 #define ENCODER_PINA 13
 #define ENCODER_PINB 12
@@ -59,7 +59,8 @@ uint8_t master_volume = 50;
 // uint8_t bass_volume = 50;
 uint8_t page_index = 0;
 uint8_t input_index = 0;
-String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "I2S IN", "SmartConfig", "Device Info", "Code Version"};
+uint8_t last_index = 0;
+String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "I2S IN", "SmartConfig", "Device Info", "About", "Exit"};
 void onSTAConnected(WiFiEventStationModeConnected ipInfo)
 {
   DEBUG_PRINT("Connected to %s\r\n", ipInfo.ssid.c_str());
@@ -205,7 +206,6 @@ void draw_page(uint8_t index)
   {
     u8g2.clearBuffer();
     u8g2.setCursor(0, 40);
-    u8g2.setFont(u8g2_font_7x14_mr);
     u8g2.print("Wifi Smartconfig...");
     u8g2.sendBuffer();
   }
@@ -213,12 +213,37 @@ void draw_page(uint8_t index)
   case 3: // show DeviceInfo page
   {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_7x14_mr);
-    u8g2.setCursor(0, 14);
-    u8g2.printf("IP:%s", "192.168.1.120");
-    u8g2.setCursor(0, 28);
-    u8g2.printf("MAC:%s", "11:22:33:44:55:66");
+    u8g2.setFont(u8g2_font_t0_12_mr);
+    u8g2.setCursor(0, 10);
+    u8g2.print("IP:");
+    u8g2.setCursor(0, 20);
+    u8g2.print(WiFi.localIP().toString());
+    u8g2.setCursor(0, 30);
+    u8g2.print("MAC:");
+    u8g2.setCursor(0, 40);
+    u8g2.print(WiFi.macAddress());
+    u8g2.setCursor(0, 50);
+    u8g2.print("SSID:");
+    u8g2.setCursor(0, 60);
+    u8g2.print(WiFi.SSID());
     u8g2.sendBuffer();
+    u8g2.setFont(u8g2_font_7x14_mr);
+  }
+  break;
+  case 4: // show DeviceInfo page
+  {
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_t0_12_mr);
+    u8g2.setCursor(46, 14);
+    u8g2.printf("About");
+    u8g2.setCursor(0, 28);
+    u8g2.printf("code ver:%s", "1.0.0");
+    u8g2.setCursor(0, 42);
+    u8g2.printf("webpage ver:%s", "1.0.0");
+    u8g2.setCursor(0, 56);
+    u8g2.printf("%s %s", __DATE__, __TIME__);
+    u8g2.sendBuffer();
+    u8g2.setFont(u8g2_font_7x14_mr);
   }
   break;
   }
@@ -244,10 +269,11 @@ void handler_key(Button2 &btn)
     page_index++;
     if (page_index == 2) //按一下进入菜单，再按一下退出菜单
     {
-      if (input_index <= 4)
+      if (input_index <= 4) //前边5路信号源
       {
-        page_index = 0;
-        select_input(input_index);
+        page_index = 0; //Main Page
+        last_index = input_index;
+        select_input(last_index);
       }
       else if (input_index == 5)
       {
@@ -257,12 +283,20 @@ void handler_key(Button2 &btn)
       {
         page_index = 3;
       }
+      else if (input_index == 7)
+      {
+        page_index = 4;
+      }
+      else if (input_index == 8)
+      {
+        page_index = 0;
+        input_index = last_index;
+      }
     }
-    else if (page_index == 3 || page_index == 4)
+    else if (page_index >= 3) //再按一下返回
     {
       page_index = 1;
     }
-
     break;
   case DOUBLE_CLICK:
     Serial.print("double ");
@@ -302,7 +336,6 @@ void setup()
   pinMode(15, OUTPUT);
   digitalWrite(16, 1);
   digitalWrite(15, 1);
-
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   long lastMsg = millis();
@@ -323,6 +356,7 @@ void setup()
   //mac.replace(":", "");                //去掉：号
   mac.toLowerCase(); //转为小写
   DEBUG_PRINT("Mac Address:%s\n", mac.c_str());
+  DEBUG_PRINT("Compiled DateTime: %s %s\n", __DATE__, __TIME__);
   //irrecv.enableIRIn(); // Start the receiver
   //https://www.jianshu.com/p/014bcae94c8b
 
@@ -432,8 +466,9 @@ void loop()
     {
       master_volume = checkRange(MAX_VOLUME, master_volume);
       dir == DIR_CW ? master_volume++ : master_volume--;
+      draw_page(page_index);
     }
-    else
+    else if (page_index == 1)
     {
       if (dir == DIR_CW)
       {
@@ -451,9 +486,10 @@ void loop()
         }
         input_index--;
       }
-      DEBUG_PRINT("input_index:%d\r\n", input_index);
+      //DEBUG_PRINT("input_index:%d\r\n", input_index);
+
+      draw_page(page_index);
     }
-    draw_page(page_index);
   }
   push_button.loop();
   if (irrecv.decode(&results))
