@@ -1,1 +1,1 @@
-用arduino ide 打开后选择ESP8266SKetch上传网页
+浣跨敤Arduino IDE 鎵撳紑宸ョ▼鍚庨�夋嫨ESP8266鐨凷PIFFS鍥轰欢涓婁紶宸ュ叿涓婁紶缃戦〉
