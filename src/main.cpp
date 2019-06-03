@@ -61,6 +61,8 @@ uint8_t page_index = 0;
 uint8_t input_index = 0;
 uint8_t last_index = 0;
 //遥控器代码定义
+uint8_t command = 0;
+uint8_t last_command = 0;
 uint32_t remote_code = 0x0000;
 uint8_t volume_up_code = 0x46;
 uint8_t volume_down_code = 0x16;
@@ -76,6 +78,8 @@ uint8_t coax1_code = 0x17;
 uint8_t coax2_code = 0x40;
 uint8_t bt_code = 0x04;
 String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "I2S IN", "SmartConfig", "IR Decode", "Device Info", "About", "Exit"};
+
+StaticJsonBuffer<510> jsonBuffer;
 void onSTAConnected(WiFiEventStationModeConnected ipInfo)
 {
   DEBUG_PRINT("Connected to %s\r\n", ipInfo.ssid.c_str());
@@ -380,7 +384,7 @@ void setup()
   DEBUG_PRINT("Compiled DateTime: %s %s\n", __DATE__, __TIME__);
   //irrecv.enableIRIn(); // Start the receiver
   //https://www.jianshu.com/p/014bcae94c8b
-
+  //https://github.com/pellepl/spiffs/wiki/Using-spiffs
   bool ok = SPIFFS.begin();
   if (ok)
   {
@@ -393,6 +397,68 @@ void setup()
       File f = dir.openFile("r");
       DEBUG_PRINT("File Name:%s File Size:%d\r\n", dir.fileName().c_str(), f.size());
     }
+    File f = SPIFFS.open("/remote_code.cfg", "w");
+    if (!f)
+    {
+      DEBUG_PRINT("Remote Code Config Is Not Exists\r\n");
+      JsonObject &root = jsonBuffer.createObject();
+      root["remote_code"] = remote_code;
+      root["volume_up_code"] = volume_up_code;
+      root["volume_down_code"] = volume_down_code;
+      root["volume_mute_code"] = volume_mute_code;
+      root["bt_next_code"] = bt_next_code;
+      root["bt_pre_code"] = bt_pre_code;
+      root["bt_pause_code"] = bt_pause_code;
+      root["bt_code"] = bt_code;
+      root["power_code"] = power_code;
+      root["source_code"] = source_code;
+      root["opt1_code"] = opt1_code;
+      root["opt2_code"] = opt2_code;
+      root["coax1_code"] = coax1_code;
+      root["coax2_code"] = coax2_code;
+      String s = "";
+      root.prettyPrintTo(s);
+      int bytesWritten = f.print(s);
+      if (bytesWritten > 0)
+      {
+        DEBUG_PRINT("File was written\r\n");
+      }
+      else
+      {
+        DEBUG_PRINT("File write failed\r\n");
+      }
+    }
+    else
+    {
+      JsonObject &root = jsonBuffer.createObject();
+      root["remote_code"] = remote_code;
+      root["volume_up_code"] = volume_up_code;
+      root["volume_down_code"] = volume_down_code;
+      root["volume_mute_code"] = volume_mute_code;
+      root["bt_next_code"] = bt_next_code;
+      root["bt_pre_code"] = bt_pre_code;
+      root["bt_pause_code"] = bt_pause_code;
+      root["bt_code"] = bt_code;
+      root["power_code"] = power_code;
+      root["source_code"] = source_code;
+      root["opt1_code"] = opt1_code;
+      root["opt2_code"] = opt2_code;
+      root["coax1_code"] = coax1_code;
+      root["coax2_code"] = coax2_code;
+      String s = "";
+      root.prettyPrintTo(s);
+      int bytesWritten = f.print(s);
+      if (bytesWritten > 0)
+      {
+        DEBUG_PRINT("File was written\r\n");
+      }
+      else
+      {
+        DEBUG_PRINT("File write failed\r\n");
+      }
+      DEBUG_PRINT("Remote Code Config Data:%s\r\n", f.readString().c_str());
+    }
+    f.close();
   }
   else
   {
@@ -515,9 +581,6 @@ void loop()
   push_button.loop();
   if (irrecv.decode(&results))
   {
-    if (results.repeat == true)
-    {
-    }
 
     if (input_index == 6)
     {
@@ -536,12 +599,29 @@ void loop()
       DEBUG_PRINT("Address:0x%04X Command:0x%02X\n", results.address, results.command);
       return;
     }
-    uint8_t command = results.command;
+    command = results.command;
+    if (command != 0x00)
+    {
+      last_command = command;
+    }
+    DEBUG_PRINT("Command:0x%02X\n", command);
     if (remote_code != results.address)
     {
       return;
     }
-    if (command == volume_up_code)
+    if (results.repeat == true && last_command == volume_up_code)
+    {
+      master_volume = checkRange(MAX_VOLUME, master_volume);
+      master_volume++;
+      delay(100);
+    }
+    else if (results.repeat == true && last_command == volume_down_code)
+    {
+      master_volume = checkRange(MAX_VOLUME, master_volume);
+      master_volume--;
+      delay(100);
+    }
+    else if (command == volume_up_code)
     {
       master_volume = checkRange(MAX_VOLUME, master_volume);
       master_volume++;
