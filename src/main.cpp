@@ -15,7 +15,7 @@
 #include <IRutils.h>
 #include <cs8422.h>
 #define MAX_VOLUME 100
-#define MAX_MENU 9
+#define MAX_MENU 10
 #define LED_BUILD 2
 #define ENCODER_PINA 13
 #define ENCODER_PINB 12
@@ -60,7 +60,22 @@ uint8_t master_volume = 50;
 uint8_t page_index = 0;
 uint8_t input_index = 0;
 uint8_t last_index = 0;
-String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "I2S IN", "SmartConfig", "Device Info", "About", "Exit"};
+//遥控器代码定义
+uint32_t remote_code = 0x0000;
+uint8_t volume_up_code = 0x46;
+uint8_t volume_down_code = 0x16;
+uint8_t volume_mute_code = 0x06;
+uint8_t power_code = 0x18;
+uint8_t source_code = 0x42;
+uint8_t bt_pre_code = 0x47;
+uint8_t bt_next_code = 0x15;
+uint8_t bt_pause_code = 0x55;
+uint8_t opt1_code = 0x14;
+uint8_t opt2_code = 0x10;
+uint8_t coax1_code = 0x17;
+uint8_t coax2_code = 0x40;
+uint8_t bt_code = 0x04;
+String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "I2S IN", "SmartConfig", "IR Decode", "Device Info", "About", "Exit"};
 void onSTAConnected(WiFiEventStationModeConnected ipInfo)
 {
   DEBUG_PRINT("Connected to %s\r\n", ipInfo.ssid.c_str());
@@ -135,7 +150,6 @@ void draw_page(uint8_t index)
   switch (index)
   {
   case 0: // show main page
-  {
     u8g2.clearBuffer();
     u8g2.setCursor(0, 14);
     u8g2.print(menu[input_index]);
@@ -164,10 +178,8 @@ void draw_page(uint8_t index)
     u8g2.sendBuffer();
     u8g2.setFont(u8g2_font_7x14_mr);
     set_pcm5121_volume(master_volume, master_volume);
-  }
-  break;
+    break;
   case 1: //show menu page
-  {
     u8g2.clearBuffer();
 
     if (input_index >= 4)
@@ -201,17 +213,27 @@ void draw_page(uint8_t index)
     }
     u8g2.sendBuffer();
     break;
-  }
   case 2: // show smartconfig page
-  {
     u8g2.clearBuffer();
     u8g2.setCursor(0, 40);
     u8g2.print("Wifi Smartconfig...");
     u8g2.sendBuffer();
-  }
-  break;
-  case 3: // show DeviceInfo page
-  {
+    break;
+  case 3: // show IR Decode
+    u8g2.clearBuffer();
+    u8g2.setCursor(30, 14);
+    u8g2.print("IR Decoder");
+    u8g2.setCursor(0, 28);
+    u8g2.print("Address:");
+    u8g2.setCursor(56, 28);
+    u8g2.print("0x00");
+    u8g2.setCursor(0, 42);
+    u8g2.print("command:");
+    u8g2.setCursor(56, 42);
+    u8g2.print("0x00");
+    u8g2.sendBuffer();
+    break;
+  case 4: // show DeviceInfo page
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_t0_12_mr);
     u8g2.setCursor(0, 10);
@@ -228,10 +250,8 @@ void draw_page(uint8_t index)
     u8g2.print(WiFi.SSID());
     u8g2.sendBuffer();
     u8g2.setFont(u8g2_font_7x14_mr);
-  }
-  break;
-  case 4: // show DeviceInfo page
-  {
+    break;
+  case 5: // show DeviceInfo page
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_t0_12_mr);
     u8g2.setCursor(46, 14);
@@ -244,8 +264,7 @@ void draw_page(uint8_t index)
     u8g2.printf("%s %s", __DATE__, __TIME__);
     u8g2.sendBuffer();
     u8g2.setFont(u8g2_font_7x14_mr);
-  }
-  break;
+    break;
   }
 }
 uint8_t checkRange(uint8_t max_value, uint8_t dat)
@@ -289,6 +308,10 @@ void handler_key(Button2 &btn)
       }
       else if (input_index == 8)
       {
+        page_index = 5;
+      }
+      else if (input_index == 9)
+      {
         page_index = 0;
         input_index = last_index;
       }
@@ -314,16 +337,14 @@ void handler_key(Button2 &btn)
 }
 void IntCallback()
 {
-  printf("CS8422 Format Status:0x%X\n", get_format_status());
-  printf("CS8422 PLL Status:0x%X\n", get_pll_status());
-  printf("CS8422 Receiver Status:0x%X\n", get_receiver_status());
-  printf("CS8422 Receiver Error:0x%X\r\n", get_error_status());
-  printf("CS8422 Interrupt Status:0x%X\r\n", get_interrupt_status());
+  // printf("CS8422 Format Status:0x%X\n", get_format_status());
+  // printf("CS8422 PLL Status:0x%X\n", get_pll_status());
+  // printf("CS8422 Receiver Status:0x%X\n", get_receiver_status());
+  // printf("CS8422 Receiver Error:0x%X\r\n", get_error_status());
+  // printf("CS8422 Interrupt Status:0x%X\r\n", get_interrupt_status());
   if (page_index == 0)
   {
-    u8g2.setCursor(86, 14);
-    u8g2.print(get_receiver_status() & 0x10 ? "locked" : "nolock");
-    u8g2.sendBuffer();
+    draw_page(page_index);
   }
 }
 void setup()
@@ -497,9 +518,86 @@ void loop()
     if (results.repeat == true)
     {
     }
-    //DEBUG_PRINT(resultToHumanReadableBasic(&results).c_str());
-    DEBUG_PRINT(resultToSourceCode(&results).c_str());
-    //"%02X"，是以0补齐2位数，如果超过2位就显示实际的数，字母数值大写，如果换为x，字母数值就小写。
-    DEBUG_PRINT("Address:0x%04X Command:0x%02X\n", results.address, results.command);
+
+    if (input_index == 6)
+    {
+
+      u8g2.clearBuffer();
+      u8g2.setCursor(30, 14);
+      u8g2.print("IR Decoder");
+      u8g2.setCursor(0, 28);
+      u8g2.printf("Address:0x%04X", results.address);
+      u8g2.setCursor(0, 42);
+      u8g2.printf("command:0x%02X", results.command);
+      u8g2.sendBuffer();
+      //DEBUG_PRINT(resultToHumanReadableBasic(&results).c_str());
+      DEBUG_PRINT(resultToSourceCode(&results).c_str());
+      //"%02X"，是以0补齐2位数，如果超过2位就显示实际的数，字母数值大写，如果换为x，字母数值就小写。
+      DEBUG_PRINT("Address:0x%04X Command:0x%02X\n", results.address, results.command);
+      return;
+    }
+    uint8_t command = results.command;
+    if (remote_code != results.address)
+    {
+      return;
+    }
+    if (command == volume_up_code)
+    {
+      master_volume = checkRange(MAX_VOLUME, master_volume);
+      master_volume++;
+    }
+    else if (command == volume_down_code)
+    {
+      master_volume = checkRange(MAX_VOLUME, master_volume);
+      master_volume--;
+    }
+    else if (command == volume_mute_code)
+    {
+    }
+    else if (command == bt_next_code)
+    {
+    }
+    else if (command == bt_pre_code)
+    {
+    }
+    else if (command == bt_pause_code)
+    {
+    }
+    else if (command == source_code)
+    {
+      input_index++;
+      if (input_index >= 5)
+      {
+        input_index = 0;
+      }
+      last_index = input_index;
+      select_input(last_index);
+    }
+    else if (command == opt1_code)
+    {
+      input_index = 0;
+    }
+    else if (command == opt2_code)
+    {
+      input_index = 1;
+    }
+    else if (command == coax1_code)
+    {
+      input_index = 2;
+    }
+    else if (command == coax2_code)
+    {
+      input_index = 3;
+    }
+    else if (command == power_code)
+    {
+    }
+    else if (command == volume_up_code)
+    {
+    }
+    else
+    {
+    }
+    draw_page(page_index);
   }
 }
