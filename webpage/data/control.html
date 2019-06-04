@@ -4,7 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="bootstrap.css">
+    <!-- <link rel="stylesheet" href="bootstrap.css"> -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- http://www.htmleaf.com/Demo/201502041325.html -->
     <title>Smart HiFi DAC</title>
     <style>
         .footer {
@@ -18,8 +21,13 @@
             background-color: #f5f5f5;
         }
 
-        .mtop {
-            margin-top: 10px;
+        #vol-slider .slider-selection {
+            background: rgb(0, 155, 245);
+        }
+
+        button {
+            margin: 30px, 20px, 30px, 20px;
+            width: 90px;
         }
     </style>
 </head>
@@ -52,27 +60,37 @@
     </nav>
 
     <div style="width:600px;margin: 0 auto">
-        <h3 style="text-align:center;color: dodgerblue">Light Control</h3>
+        <h3 style="text-align:center;color: dodgerblue">Control</h3>
         <hr>
     </div>
     <div style=" width:600px;margin: 0 auto">
         <p>
-            <strong>Double Control:</strong>
+            <strong>Power:</strong>
         </p>
         <div class="row" style="text-align: center">
-            <div class="col">
-                <div>
-                    <img src="off.png" alt="关" id="img_1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button class="btn  btn-success btn-sm mtop" id="btn_1" onclick="on_click(1)">ON</button>
-                </div>
-
+            <div class="col" style="margin-top:20px;margin-bottom: 20px ">
+                <button class="btn btn-default" id="btn_power">Power</button>
             </div>
-            <div class="col" style="margin-top:20px">
-                <div>
-                    <img src="off.png" alt="关" id="img_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button class="btn btn-success btn-sm mtop" id="btn_2" onclick="on_click(2)">ON</button>
-                </div>
+        </div>
+    </div>
+    <div style="width:600px;margin: 0 auto">
+        <hr>
+    </div>
+    <div style=" width:600px;margin: 0 auto">
+        <p>
+            <strong>Input Select:</strong>
+        </p>
+        <div class="row" style="text-align: center">
+            <div class="col" style="margin-top:30px;margin-bottom: 30px ">
+                <button class="btn btn-default" id="btn_0" onclick="on_click(0)">Optical-1</button>
 
+                <button class="btn btn-default" id="btn_1" onclick="on_click(1)">Optical-2</button>
+
+                <button class="btn btn-default" id="btn_2" onclick="on_click(2)">Coax-1</button>
+
+                <button class="btn btn-default" id="btn_3" onclick="on_click(3)">Coax-1</button>
+
+                <button class="btn btn-default" id="btn_4" onclick="on_click(4)">I2S IN</button>
             </div>
 
         </div>
@@ -82,166 +100,72 @@
     </div>
     <div style="width:600px;margin: 0 auto">
         <p>
-            <strong>Pulse Control:</strong>
+            <strong>Volume Control:</strong>
         </p>
-        <div class="row" style="text-align: center">
-            <div class="col">
+        <div class="row" style="text-align: center;">
+            <div class="col" style="margin-top:30px;margin-bottom: 30px ">
                 <div>
-                    <img src="off.png" alt="关" id="img_3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button class="btn btn-primary btn-sm mtop" id="btn_3" onclick="on_click(3)">ON</button>
+                    <strong>0</strong>
+                    <input style="width: 400px;" id="vol" data-slider-id='vol-slider' type="text" data-slider-min="0"
+                        data-slider-max="100" data-slider-step="1" data-slider-value="14" />
+                    <strong>100</strong>
                 </div>
-
             </div>
-            <div class="col" style="margin-top:20px">
-                <div>
-                    <img src="off.png" alt="关" id="img_4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button class="btn btn-primary btn-sm mtop" id="btn_4" onclick="on_click(4)">ON</button>
-                </div>
-
-            </div>
-
         </div>
     </div>
     <div style="width:600px;margin: 0 auto">
         <hr>
     </div>
-    <div style="width:600px;margin: 0 auto">
-        <p>
-            <strong>GPIO Control:</strong>
-        </p>
-        <div class="row" style="text-align: center">
-            <div class="col">
-                <div>
-                    <img src="off.png" alt="关" id="img_5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button class="btn btn-warning btn-sm mtop" id="btn_5" onclick="on_click(5)">ON</button>
-                </div>
 
-            </div>
-            <div class="col"></div>
-        </div>
-    </div>
-    <div style="width:600px;margin: 0 auto">
-        <hr>
-    </div>
-    <div style="width:600px;margin: 0 auto">
-        <p>
-            <strong>PWM Control:</strong>
-        </p>
-        <div class="row">
-            <div class="col" style="margin-left: 220px">
-                <input type="text" style="width:100px;" id="pwm_val">
-                <button class="btn btn-danger btn-sm" id="btn_6" onclick="on_click(8)">SET</button>
-            </div>
-        </div>
-    </div>
-    <!-- 占位符 -->
     <div style="height: 60px;"></div>
     <footer class="footer">
         <div class="container">
             <div style="text-align: center">Copyright ©2017-2019 Suzhou All Rights Reserved.</div>
         </div>
     </footer>
-
-
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="zepto.js"></script>
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <script type='text/javascript' src="js/bootstrap-slider.min.js"></script>
 </body>
 
 <script>
     $(document).ready(function () {
         //startSocket();
     });
-    var cmd = [0xAA, 0x55, 0x0E, 0x00, 0x06, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF];
 
-
-    function on_click(id) {
-        console.log(id);
-        var btn_id = "#btn_" + id;
-        var img_id = "#img_" + id;
-        var tim_id = "#tim_" + id;
-        switch (id) {
-            case 1:
-                cmd[4] = 0x01;
-                cmd[5] = 0x00;
-                cmd[6] = 0x01;
-                $("#img_1").attr("src", "on.png");
-                break;
-            case 6:
-                cmd[4] = 0x01;
-                cmd[5] = 0x00;
-                cmd[6] = 0x00;
-                $("#img_1").attr("src", "off.png");
-                break;
-            case 2:
-                cmd[4] = 0x02;
-                cmd[5] = 0x01;
-                cmd[6] = 0x01;
-                $("#img_2").attr("src", "on.png");
-                break;
-            case 7:
-                cmd[4] = 0x02;
-                cmd[5] = 0x01;
-                cmd[6] = 0x00;
-                $("#img_2").attr("src", "off.png");
-                break;
-            case 3:
-                cmd[4] = 0x03;
-                cmd[5] = 0x02;
-                cmd[6] = parseInt($(tim_id).val());
-                $(img_id).attr("src", "on.png");
-                $("#btn_4").attr("disabled", "disabled");
-                setTimeout(function () {
-                    $(img_id).attr("src", "off.png");
-                    $("#btn_4").removeAttr("disabled");
-                }, cmd[6] * 1000);
-
-                break;
-            case 4:
-                cmd[4] = 0x04;
-                cmd[5] = 0x03;
-                cmd[6] = parseInt($(tim_id).val());
-                $(img_id).attr("src", "on.png");
-                $("#btn_3").attr("disabled", "disabled");
-                setTimeout(function () {
-                    $(img_id).attr("src", "off.png");
-                    $("#btn_3").removeAttr("disabled");
-                }, cmd[6] * 1000);
-                break;
-            case 5:
-                cmd[4] = 0x05;
-                cmd[5] = 0x04;
-                if ($(btn_id).text() == "ON") {
-                    cmd[6] = 0x01;
-                    $(btn_id).text("OFF");
-                    $(img_id).attr("src", "on.png");
-                } else {
-                    cmd[6] = 0x00;
-                    $(btn_id).text("ON");
-                    $(img_id).attr("src", "off.png");
-                }
-                break;
-            case 8:
-                var val = parseInt($('#pwm_val').val());
-                if (val > 100 || val < 0) {
-                    alert("value range should be in 0-100!");
-                    return;
-                }
-                cmd[4] = 0x0d;
-                cmd[5] = val;
-                cmd[6] = 0;
-                break;
-            default:
-                break;
+    $('#vol').slider({
+        tooltip: 'always',
+        formatter: function (value) {
+            return 'vol: ' + value;
         }
-        ajax_send({
-            'cmd': cmd
+    });
+    $('#vol').on("slideStop", function (event) {
+        //console.log("value:" + event.value);
+        var vol = JSON.stringify({
+            'volume': parseInt(event.value),
         });
+        ajax_send("set_volume", vol);
+    })
+    // $('#vol').on("change", function (event) {
+    //     console.log("value:" + event.value.oldValue);
+    // })
+    function on_click(id) {
+        var btn_id = "#btn_" + id;
+        for (i = 0; i < 5; i++) {
+            var btn = "#btn_" + i;
+            $(btn).removeClass("btn-default");
+            $(btn).removeClass("btn-info");
+        }
+        $(btn_id).addClass("btn-info");
+        var source = JSON.stringify({
+            'source': parseInt(id),
+        });
+        ajax_send("set_source", source);
     }
 
-    function ajax_send(data) {
+    function ajax_send(url, data) {
         $.ajax({
             type: 'POST',
-            url: "light_control",
+            url: url,
             data: JSON.stringify(data),
             dataType: 'json',
             success: function (data) {
@@ -255,11 +179,11 @@
                     //     $(img_id).attr("src", "off.png");
                     // }
                 }
-                alert("Success");
+                //alert("Success");
             },
             error: function (data) {
                 console.log('Failed！');
-                alert("Failed");
+                //alert("Failed");
             },
         });
     }

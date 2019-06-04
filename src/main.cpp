@@ -42,6 +42,8 @@ const char *password = "sonavox168";
 static WiFiEventHandler e1, e2, e3;
 WiFiClient espClient;
 AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");           // access at ws://[esp ip]/ws
+AsyncEventSource events("/events"); // event source (Server-Sent events)
 String mac = "";
 Rotary encoder = Rotary(12, 13);
 //full framebuffer, size = 1024 bytes  6 pages * 128 bytes
@@ -351,6 +353,96 @@ void IntCallback()
     draw_page(page_index);
   }
 }
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+  if (type == WS_EVT_CONNECT)
+  {
+    //client connected
+    os_printf("ws[%s][%u] connect\n", server->url(), client->id());
+    client->printf("Hello Client %u :)", client->id());
+    client->ping();
+  }
+  else if (type == WS_EVT_DISCONNECT)
+  {
+    //client disconnected
+    os_printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+  }
+  else if (type == WS_EVT_ERROR)
+  {
+    //error was received from the other end
+    os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+  }
+  else if (type == WS_EVT_PONG)
+  {
+    //pong message was received (in response to a ping request maybe)
+    os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+  }
+  else if (type == WS_EVT_DATA)
+  {
+    //data packet
+    AwsFrameInfo *info = (AwsFrameInfo *)arg;
+    if (info->final && info->index == 0 && info->len == len)
+    {
+      //the whole message is in a single frame and we got all of it's data
+      os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+      if (info->opcode == WS_TEXT)
+      {
+        data[len] = 0;
+        os_printf("%s\n", (char *)data);
+      }
+      else
+      {
+        for (size_t i = 0; i < info->len; i++)
+        {
+          os_printf("%02x ", data[i]);
+        }
+        os_printf("\n");
+      }
+      if (info->opcode == WS_TEXT)
+        client->text("I got your text message");
+      else
+        client->binary("I got your binary message");
+    }
+    else
+    {
+      //message is comprised of multiple frames or the frame is split into multiple packets
+      if (info->index == 0)
+      {
+        if (info->num == 0)
+          os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+        os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+      }
+
+      os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+      if (info->message_opcode == WS_TEXT)
+      {
+        data[len] = 0;
+        os_printf("%s\n", (char *)data);
+      }
+      else
+      {
+        for (size_t i = 0; i < len; i++)
+        {
+          os_printf("%02x ", data[i]);
+        }
+        os_printf("\n");
+      }
+
+      if ((info->index + len) == info->len)
+      {
+        os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+        if (info->final)
+        {
+          os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+          if (info->message_opcode == WS_TEXT)
+            client->text("I got your text message");
+          else
+            client->binary("I got your binary message");
+        }
+      }
+    }
+  }
+}
 void setup()
 {
   Serial.begin(115200);
@@ -512,8 +604,8 @@ void setup()
     root["gateway"] = WiFi.gatewayIP().toString();
     root["dns"] = WiFi.dnsIP().toString();
     root["mask"] = WiFi.subnetMask().toString();
-    root["time"] = "time";
-    root["server"] = "ntp1.aliyun.com";
+    root["rtc_time"] = "time";
+    root["ntp_server"] = "ntp1.aliyun.com";
     response->setLength();
     request->send(response);
   });
@@ -532,8 +624,58 @@ void setup()
     response->setLength();
     request->send(response);
   });
-  server.begin();
+  server.on("/set_volume", HTTP_POST, [](AsyncWebServerRequest *request) {
+    
+    AsyncWebParameter *p = request->getParam(0);
+    DEBUG_PRINT("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    response->addHeader("Server", "ESP Async Web Server");
+    JsonObject &rsp = response->getRoot();
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject &root = jsonBuffer.parseObject(p->value());
+    if (!root.success())
+    {
+      rsp["status"] = "failed";
+      response->setLength();
+      request->send(response);
+      return;
+    }
+    master_volume = root["volume"];
+    rsp["status"] = "success";
+    response->setLength();
+    request->send(response);
+    draw_page(last_index);
+  });
+  server.on("/set_source", HTTP_POST, [](AsyncWebServerRequest *request) {
+    
+    AsyncWebParameter *p = request->getParam(0);
+    DEBUG_PRINT("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    response->addHeader("Server", "ESP Async Web Server");
+    JsonObject &rsp = response->getRoot();
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject &root = jsonBuffer.parseObject(p->value());
+    if (!root.success())
+    {
+      rsp["status"] = "failed";
+      response->setLength();
+      request->send(response);
+      return;
+    }
+    input_index = root["source"];
+    last_index = input_index;
+    rsp["status"] = "success";
+    response->setLength();
+    request->send(response);
+    draw_page(last_index);
+  });
 
+  // attach AsyncWebSocket
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+  // attach AsyncEventSource
+  server.addHandler(&events);
+  server.begin();
   pcm5121_init();
   set_pcm5121_volume(50, 50);
   digitalWrite(CS8422_RST_PIN, 0);
@@ -584,7 +726,6 @@ void loop()
 
     if (input_index == 6)
     {
-
       u8g2.clearBuffer();
       u8g2.setCursor(30, 14);
       u8g2.print("IR Decoder");
