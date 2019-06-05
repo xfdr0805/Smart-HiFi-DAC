@@ -79,9 +79,9 @@ uint8_t opt2_code = 0x10;
 uint8_t coax1_code = 0x17;
 uint8_t coax2_code = 0x40;
 uint8_t bt_code = 0x04;
+uint8_t mute_code = 0x04;
 String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "I2S IN", "SmartConfig", "IR Decode", "Device Info", "About", "Exit"};
-
-StaticJsonBuffer<510> jsonBuffer;
+DynamicJsonBuffer jsonBuffer;
 void onSTAConnected(WiFiEventStationModeConnected ipInfo)
 {
   DEBUG_PRINT("Connected to %s\r\n", ipInfo.ssid.c_str());
@@ -502,6 +502,7 @@ void setup()
       root["bt_pre_code"] = bt_pre_code;
       root["bt_pause_code"] = bt_pause_code;
       root["bt_code"] = bt_code;
+      root["mute_code"] = mute_code;
       root["power_code"] = power_code;
       root["source_code"] = source_code;
       root["opt1_code"] = opt1_code;
@@ -522,33 +523,29 @@ void setup()
     }
     else
     {
-      JsonObject &root = jsonBuffer.createObject();
-      root["remote_code"] = remote_code;
-      root["volume_up_code"] = volume_up_code;
-      root["volume_down_code"] = volume_down_code;
-      root["volume_mute_code"] = volume_mute_code;
-      root["bt_next_code"] = bt_next_code;
-      root["bt_pre_code"] = bt_pre_code;
-      root["bt_pause_code"] = bt_pause_code;
-      root["bt_code"] = bt_code;
-      root["power_code"] = power_code;
-      root["source_code"] = source_code;
-      root["opt1_code"] = opt1_code;
-      root["opt2_code"] = opt2_code;
-      root["coax1_code"] = coax1_code;
-      root["coax2_code"] = coax2_code;
-      String s = "";
-      root.prettyPrintTo(s);
-      int bytesWritten = f.print(s);
-      if (bytesWritten > 0)
+      uint8_t json[256] = "";
+      DEBUG_PRINT("Remote Code Config Data:%s\r\n", f.read(json, f.size()));
+      JsonObject &root = jsonBuffer.parseObject(json);
+      if (!root.success())
       {
-        DEBUG_PRINT("File was written\r\n");
+        DEBUG_PRINT("Remote Code Config Data parse failed:%s\r\n");
+        return;
       }
-      else
-      {
-        DEBUG_PRINT("File write failed\r\n");
-      }
-      DEBUG_PRINT("Remote Code Config Data:%s\r\n", f.readString().c_str());
+      remote_code = root["remote_code"];
+      volume_up_code = root["volume_up_code"];
+      volume_down_code = root["volume_down_code"];
+      volume_mute_code = root["volume_mute_code"];
+      bt_next_code = root["bt_next_code"];
+      bt_pre_code = root["bt_pre_code"];
+      bt_pause_code = root["bt_pause_code"];
+      bt_code = root["bt_code"];
+      mute_code = root["mute_code"];
+      power_code = root["power_code"];
+      source_code = root["source_code"];
+      opt1_code = root["opt1_code"];
+      opt2_code = root["opt2_code"];
+      coax1_code = root["coax1_code"];
+      coax2_code = root["coax2_code"];
     }
     f.close();
   }
@@ -599,13 +596,71 @@ void setup()
     //int index = p->value().toInt();
     root["heap"] = ESP.getFreeHeap();
     root["ssid"] = WiFi.SSID();
-    root["mode"] = "DHCP";
+    root["mode"] = "dhcp";
     root["ip"] = WiFi.localIP().toString();
     root["gateway"] = WiFi.gatewayIP().toString();
     root["dns"] = WiFi.dnsIP().toString();
     root["mask"] = WiFi.subnetMask().toString();
     root["rtc_time"] = "time";
     root["ntp_server"] = "ntp1.aliyun.com";
+    response->setLength();
+    request->send(response);
+  });
+  server.on("/get_remote_cfg", HTTP_POST, [](AsyncWebServerRequest *request) {
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    response->addHeader("Server", "ESP Async Web Server");
+    JsonObject &root = response->getRoot();
+    root["remote_code"] = remote_code;
+    root["volume_up_code"] = volume_up_code;
+    root["volume_down_code"] = volume_down_code;
+    root["volume_mute_code"] = volume_mute_code;
+    root["bt_next_code"] = bt_next_code;
+    root["bt_pre_code"] = bt_pre_code;
+    root["bt_pause_code"] = bt_pause_code;
+    root["bt_code"] = bt_code;
+    root["mute_code"] = mute_code;
+    root["power_code"] = power_code;
+    root["source_code"] = source_code;
+    root["opt1_code"] = opt1_code;
+    root["opt2_code"] = opt2_code;
+    root["coax1_code"] = coax1_code;
+    root["coax2_code"] = coax2_code;
+    response->setLength();
+    request->send(response);
+  });
+  server.on("/set_remote_cfg", HTTP_POST, [](AsyncWebServerRequest *request) {
+    AsyncWebParameter *p = request->getParam(0);
+    DEBUG_PRINT("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    response->addHeader("Server", "ESP Async Web Server");
+    JsonObject &rsp = response->getRoot();
+    JsonObject &root = jsonBuffer.parseObject(p->value());
+    if (!root.success())
+    {
+      rsp["status"] = "failed";
+      response->setLength();
+      request->send(response);
+      return;
+    }
+    File f = SPIFFS.open("/remote_code.cfg", "w");
+    f.print(p->value());
+    f.close();
+    remote_code = root["remote_code"];
+    volume_up_code = root["volume_up_code"];
+    volume_down_code = root["volume_down_code"];
+    volume_mute_code = root["volume_mute_code"];
+    bt_next_code = root["bt_next_code"];
+    bt_pre_code = root["bt_pre_code"];
+    bt_pause_code = root["bt_pause_code"];
+    bt_code = root["bt_code"];
+    mute_code = root["mute_code"];
+    power_code = root["power_code"];
+    source_code = root["source_code"];
+    opt1_code = root["opt1_code"];
+    opt2_code = root["opt2_code"];
+    coax1_code = root["coax1_code"];
+    coax2_code = root["coax2_code"];
+    rsp["status"] = "success";
     response->setLength();
     request->send(response);
   });
@@ -640,7 +695,6 @@ void setup()
     AsyncJsonResponse *response = new AsyncJsonResponse();
     response->addHeader("Server", "ESP Async Web Server");
     JsonObject &rsp = response->getRoot();
-    DynamicJsonBuffer jsonBuffer;
     JsonObject &root = jsonBuffer.parseObject(p->value());
     if (!root.success())
     {
@@ -661,7 +715,6 @@ void setup()
     AsyncJsonResponse *response = new AsyncJsonResponse();
     response->addHeader("Server", "ESP Async Web Server");
     JsonObject &rsp = response->getRoot();
-    DynamicJsonBuffer jsonBuffer;
     JsonObject &root = jsonBuffer.parseObject(p->value());
     if (!root.success())
     {

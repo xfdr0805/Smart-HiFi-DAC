@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <title>Smart HiFi DAC</title>
+    <style>
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            /* Set the fixed height of the footer here */
+            line-height: 60px;
+            /* Vertically center the text there */
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+    <div></div>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid" style="margin-right: 50px">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#" style="color: darkcyan">Smart HiFi DAC</a>
+            </div>
+            <div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="nav-item">
+                        <a class="active" href="/info.html">Index</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/setup.html">Setup</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/control.html">Control</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/remote.html">Remote</a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <h3 style="text-align:center;color: dodgerblue">Remote Config</h3>
+    <div class="container" style="width:600px;">
+        <strong>IR Remote Data</strong>
+        <hr>
+        <form>
+            <div>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">Remote Address:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="addr" placeholder="">
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">Power:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="power" placeholder="">
+                    </div>
+                    <label for="ip" class="col-sm-3 col-form-label">Volume Mute:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="mute" placeholder="">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">Volume up:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="vol_up" placeholder="">
+                    </div>
+                    <label for="ip" class="col-sm-3 col-form-label">Volume down:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="vol_down" placeholder="">
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">Optical-1:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="opt1" placeholder="">
+                    </div>
+                    <label for="ip" class="col-sm-3 col-form-label">Optical-2:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="opt2" placeholder="">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">Coaxial-1:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="coax1" placeholder="">
+                    </div>
+                    <label for="ip" class="col-sm-3 col-form-label">Coaxial-2:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="coax2" placeholder="">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">Bluetooth:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="bt" placeholder="">
+                    </div>
+                    <label for="ip" class="col-sm-3 col-form-label">Source:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="source" placeholder="">
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">BT Pre:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="bt_pre" placeholder="">
+                    </div>
+                    <label for="ip" class="col-sm-3 col-form-label">BT Next:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="bt_next" placeholder="">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="ip" class="col-sm-3 col-form-label">BT Pause:</label>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="bt_pause" placeholder="">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row" style="margin-top: 50px">
+                <label for="dns" class="col-sm-5 col-form-label"></label>
+                <div class="col-sm-3">
+                    <a type="button" class="btn btn-info" id="submit">&nbsp;&nbsp;Submit&nbsp;&nbsp;</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div style="height: 60px;"></div>
+    <footer class="footer">
+        <div class="container">
+            <div style="text-align: center">Copyright ©2017-2019 Suzhou All Rights Reserved.</div>
+        </div>
+    </footer>
+    <script src="js/jquery-2.1.0.min.js"></script>
+</body>
+
+<script>
+    var cnt_rtc = 0;
+    var cnt_ntp = 0;
+    $(document).ready(function () {
+        $.ajax({
+            type: 'POST',
+            url: "get_remote_cfg",
+            data: "",
+            dataType: 'json',
+            success: function (data) {
+                $("#addr").val("0x" + data.remote_code.toString(16));
+                $("#vol_up").val("0x" + data.volume_up_code.toString(16));
+                $("#vol_down").val("0x" + data.volume_down_code.toString(16));
+                $("#mute").val("0x" + data.volume_mute_code.toString(16));
+                $("#bt_next").val("0x" + data.bt_next_code.toString(16));
+                $("#bt_pause").val("0x" + data.bt_pause_code.toString(16));
+                $("#bt_pre").val("0x" + data.bt_pre_code.toString(16));
+                $("#power").val("0x" + data.power_code.toString(16));
+                $("#mute").val("0x" + data.mute_code.toString(16));
+                $("#opt1").val("0x" + data.opt1_code.toString(16));
+                $("#opt2").val("0x" + data.opt2_code.toString(16));
+                $("#coax1").val("0x" + data.coax1_code.toString(16));
+                $("#coax2").val("0x" + data.coax2_code.toString(16));
+                $("#bt").val("0x" + data.bt_code.toString(16));
+                $("#source").val("0x" + data.source_code.toString(16));
+
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+            },
+        });
+    });
+
+    $('#submit').click(function () {
+        var remote_data = JSON.stringify({
+            "remote_code": parseInt($("#addr").val()),
+            "volume_up_code": parseInt($("#vol_up").val()),
+            "volume_down_code": parseInt($("#vol_down").val()),
+            "mute_code": parseInt($("#mute").val()),
+            "opt1_code": parseInt($("#opt1").val()),
+            "opt2_code": parseInt($("#opt2").val()),
+            "coax1_code": parseInt($("#coax1").val()),
+            "coax2_code": parseInt($("#coax2").val()),
+            "bt_code": parseInt($("#bt").val()),
+            "bt_pre_code": parseInt($("#bt_pre").val()),
+            "bt_next_code": parseInt($("#bt_next").val()),
+            "bt_pause_code": parseInt($("#bt_pause").val()),
+            "power_code": parseInt($("#power").val()),
+            "source_code": parseInt($("#source").val())
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: "set_remote_cfg",
+            data: remote_data,
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == 'success') {
+                    alert("Success");
+                }
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+                alert("Failed");
+            },
+        });
+    });
+    $('#restart').click(function () {
+        $.ajax({
+            type: 'POST',
+            url: "reset_cpu",
+            data: JSON.stringify({
+                "cmd": "restart"
+            }),
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == 'success') {
+                    alert("Success");
+                }
+
+            },
+            error: function (data) {
+                console.log('获取数据失败！');
+                alert("Failed");
+            },
+        });
+    });
+</script>
+</body>
+
+</html>
