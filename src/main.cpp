@@ -574,7 +574,7 @@ void setup()
   push_button.setLongClickHandler(handler_key);
   attachInterrupt(digitalPinToInterrupt(CS8422_INT_PIN), IntCallback, RISING);
   irrecv.enableIRIn(); // Start the receiver
-  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html").setAuthentication("admin", "admin");
+  server.serveStatic("/", SPIFFS, "/").setDefaultFile("info.html").setAuthentication("admin", "admin");
   //server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html").setAuthentication("admin", "admin");
 
   //server.serveStatic("/js", SPIFFS, "/js");
