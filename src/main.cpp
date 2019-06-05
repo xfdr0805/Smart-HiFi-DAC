@@ -489,65 +489,74 @@ void setup()
       File f = dir.openFile("r");
       DEBUG_PRINT("File Name:%s File Size:%d\r\n", dir.fileName().c_str(), f.size());
     }
-    File f = SPIFFS.open("/remote_code.cfg", "w");
+    //模式为w时，是不能读取的，必须分开处理
+    File f = SPIFFS.open("/remote_code.cfg", "r");
     if (!f)
     {
       DEBUG_PRINT("Remote Code Config Is Not Exists\r\n");
-      JsonObject &root = jsonBuffer.createObject();
-      root["remote_code"] = remote_code;
-      root["volume_up_code"] = volume_up_code;
-      root["volume_down_code"] = volume_down_code;
-      root["volume_mute_code"] = volume_mute_code;
-      root["bt_next_code"] = bt_next_code;
-      root["bt_pre_code"] = bt_pre_code;
-      root["bt_pause_code"] = bt_pause_code;
-      root["bt_code"] = bt_code;
-      root["mute_code"] = mute_code;
-      root["power_code"] = power_code;
-      root["source_code"] = source_code;
-      root["opt1_code"] = opt1_code;
-      root["opt2_code"] = opt2_code;
-      root["coax1_code"] = coax1_code;
-      root["coax2_code"] = coax2_code;
-      String s = "";
-      root.prettyPrintTo(s);
-      int bytesWritten = f.print(s);
-      if (bytesWritten > 0)
-      {
-        DEBUG_PRINT("File was written\r\n");
-      }
-      else
-      {
-        DEBUG_PRINT("File write failed\r\n");
-      }
     }
     else
     {
-      uint8_t json[256] = "";
-      DEBUG_PRINT("Remote Code Config Data:%s\r\n", f.read(json, f.size()));
+      String json = "";
+      while (f.available())
+      {
+        json += char(f.read());
+      }
+      DEBUG_PRINT("Remote Data:%s\r\n", json.c_str());
       JsonObject &root = jsonBuffer.parseObject(json);
       if (!root.success())
       {
-        DEBUG_PRINT("Remote Code Config Data parse failed:%s\r\n");
-        return;
+        f.close();
+        DEBUG_PRINT("Remote Code Config Data parse failed.\r\n");
+        JsonObject &root = jsonBuffer.createObject();
+        root["remote_code"] = remote_code;
+        root["volume_up_code"] = volume_up_code;
+        root["volume_down_code"] = volume_down_code;
+        root["volume_mute_code"] = volume_mute_code;
+        root["bt_next_code"] = bt_next_code;
+        root["bt_pre_code"] = bt_pre_code;
+        root["bt_pause_code"] = bt_pause_code;
+        root["bt_code"] = bt_code;
+        root["mute_code"] = mute_code;
+        root["power_code"] = power_code;
+        root["source_code"] = source_code;
+        root["opt1_code"] = opt1_code;
+        root["opt2_code"] = opt2_code;
+        root["coax1_code"] = coax1_code;
+        root["coax2_code"] = coax2_code;
+        File ff = SPIFFS.open("/remote_code.cfg", "w");
+        String s = "";
+        root.prettyPrintTo(s);
+        int bytesWritten = ff.print(s);
+        if (bytesWritten > 0)
+        {
+          DEBUG_PRINT("File was written\r\n");
+        }
+        else
+        {
+          DEBUG_PRINT("File write failed\r\n");
+        }
+        ff.close();
       }
-      remote_code = root["remote_code"];
-      volume_up_code = root["volume_up_code"];
-      volume_down_code = root["volume_down_code"];
-      volume_mute_code = root["volume_mute_code"];
-      bt_next_code = root["bt_next_code"];
-      bt_pre_code = root["bt_pre_code"];
-      bt_pause_code = root["bt_pause_code"];
-      bt_code = root["bt_code"];
-      mute_code = root["mute_code"];
-      power_code = root["power_code"];
-      source_code = root["source_code"];
-      opt1_code = root["opt1_code"];
-      opt2_code = root["opt2_code"];
-      coax1_code = root["coax1_code"];
-      coax2_code = root["coax2_code"];
+      else
+      {
+        remote_code = root["remote_code"];
+        volume_up_code = root["volume_up_code"];
+        volume_down_code = root["volume_down_code"];
+        volume_mute_code = root["volume_mute_code"];
+        bt_next_code = root["bt_next_code"];
+        bt_pre_code = root["bt_pre_code"];
+        bt_pause_code = root["bt_pause_code"];
+        bt_code = root["bt_code"];
+        mute_code = root["mute_code"];
+        power_code = root["power_code"];
+        source_code = root["source_code"];
+        opt1_code = root["opt1_code"];
+        opt2_code = root["opt2_code"];
+        coax1_code = root["coax1_code"];
+        coax2_code = root["coax2_code"];
+      }
     }
-    f.close();
   }
   else
   {
@@ -642,6 +651,7 @@ void setup()
       request->send(response);
       return;
     }
+    //保存参数
     File f = SPIFFS.open("/remote_code.cfg", "w");
     f.print(p->value());
     f.close();
