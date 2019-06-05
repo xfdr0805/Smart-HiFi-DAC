@@ -107,7 +107,7 @@
                 <div>
                     <strong>0</strong>
                     <input style="width: 400px;" id="vol" data-slider-id='vol-slider' type="text" data-slider-min="0"
-                        data-slider-max="100" data-slider-step="1" data-slider-value="14" />
+                        data-slider-max="100" data-slider-step="1" data-slider-value="50" />
                     <strong>100</strong>
                 </div>
             </div>
@@ -129,20 +129,45 @@
 
 <script>
     $(document).ready(function () {
-        //startSocket();
+        get_dac_status();
     });
 
+    function get_dac_status() {
+        $.ajax({
+            type: 'POST',
+            url: "get_dac_status",
+            data: "",
+            dataType: 'json',
+            success: function (data) {
+                console.log(data);
+                var btn_id = "#btn_" + data.source;
+                for (i = 0; i < 5; i++) {
+                    var btn = "#btn_" + i;
+                    $(btn).removeClass("btn-default");
+                    $(btn).removeClass("btn-info");
+                }
+                $(btn_id).addClass("btn-info");
+                $('#vol').slider("setValue", data.volume, false, false);
+                //alert("Success");
+            },
+            error: function (data) {
+                console.log('Failed！');
+                //alert("Failed");
+            },
+        });
+    }
+    setInterval(get_dac_status, 1000);
     $('#vol').slider({
         tooltip: 'always',
         formatter: function (value) {
-            return 'vol: ' + value;
+            return 'VOL: ' + value;
         }
     });
     $('#vol').on("slideStop", function (event) {
         //console.log("value:" + event.value);
-        var vol = JSON.stringify({
+        var vol = {
             'volume': parseInt(event.value),
-        });
+        };
         ajax_send("set_volume", vol);
     })
     // $('#vol').on("change", function (event) {
@@ -156,9 +181,9 @@
             $(btn).removeClass("btn-info");
         }
         $(btn_id).addClass("btn-info");
-        var source = JSON.stringify({
+        var source = {
             'source': parseInt(id),
-        });
+        };
         ajax_send("set_source", source);
     }
 

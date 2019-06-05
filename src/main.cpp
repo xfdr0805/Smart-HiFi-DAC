@@ -624,8 +624,17 @@ void setup()
     response->setLength();
     request->send(response);
   });
+  server.on("/get_dac_status", HTTP_POST, [](AsyncWebServerRequest *request) {
+    //int params = request->params();
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    response->addHeader("Server", "ESP Async Web Server");
+    JsonObject &root = response->getRoot();
+    root["source"] = last_index;
+    root["volume"] = master_volume;
+    response->setLength();
+    request->send(response);
+  });
   server.on("/set_volume", HTTP_POST, [](AsyncWebServerRequest *request) {
-    
     AsyncWebParameter *p = request->getParam(0);
     DEBUG_PRINT("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
     AsyncJsonResponse *response = new AsyncJsonResponse();
@@ -644,10 +653,9 @@ void setup()
     rsp["status"] = "success";
     response->setLength();
     request->send(response);
-    draw_page(last_index);
+    draw_page(page_index);
   });
   server.on("/set_source", HTTP_POST, [](AsyncWebServerRequest *request) {
-    
     AsyncWebParameter *p = request->getParam(0);
     DEBUG_PRINT("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
     AsyncJsonResponse *response = new AsyncJsonResponse();
@@ -664,10 +672,11 @@ void setup()
     }
     input_index = root["source"];
     last_index = input_index;
+    select_input(last_index);
     rsp["status"] = "success";
     response->setLength();
     request->send(response);
-    draw_page(last_index);
+    draw_page(page_index);
   });
 
   // attach AsyncWebSocket
