@@ -7,6 +7,7 @@
 #define Receiver_Data_Control 0x04
 #define Gpio_Control1 0x05
 #define Gpio_Control2 0x06
+#define Serial_Audio_Input_Clock_Control 0x07
 #define SRC_Output_Serial_Port_Clock 0x08
 #define Recovered_Master_Clock 0x09
 #define Data_Routing_Control 0x0A
@@ -29,17 +30,7 @@ void cs8422_init()
 {
     Wire.beginTransmission(cs8422);
     Wire.write(Clock_Control); //PDN 0
-    Wire.write(0x00);
-    i2cfail += Wire.endTransmission(true);
-
-    Wire.beginTransmission(cs8422);
-    Wire.write(SRC_Output_Serial_Port_Clock);
-    Wire.write(0x4a); //
-    i2cfail += Wire.endTransmission(true);
-
-    Wire.beginTransmission(cs8422);
-    Wire.write(Recovered_Master_Clock);
-    Wire.write(0x40); //
+    Wire.write(0x24);
     i2cfail += Wire.endTransmission(true);
 
     Wire.beginTransmission(cs8422);
@@ -53,8 +44,18 @@ void cs8422_init()
     i2cfail += Wire.endTransmission(true);
 
     Wire.beginTransmission(cs8422);
-    Wire.write(Serial_Audio_Input_Data_Format);
-    Wire.write(0x08); // i2s in 24bit
+    Wire.write(Serial_Audio_Input_Clock_Control);
+    Wire.write(0x08);
+    i2cfail += Wire.endTransmission(true);
+
+    Wire.beginTransmission(cs8422);
+    Wire.write(SRC_Output_Serial_Port_Clock);
+    Wire.write(0x0a); //
+    i2cfail += Wire.endTransmission(true);
+
+    Wire.beginTransmission(cs8422);
+    Wire.write(Recovered_Master_Clock);
+    Wire.write(0x08); //
     i2cfail += Wire.endTransmission(true);
 
     Wire.beginTransmission(cs8422);
@@ -63,13 +64,18 @@ void cs8422_init()
     i2cfail += Wire.endTransmission(true);
 
     Wire.beginTransmission(cs8422);
+    Wire.write(Serial_Audio_Input_Data_Format);
+    Wire.write(0x08); // i2s in 24bit
+    i2cfail += Wire.endTransmission(true);
+
+    Wire.beginTransmission(cs8422);
     Wire.write(Serial_Audio_Output1_Data_Format);
-    Wire.write(0x84); //SDOUT1
+    Wire.write(0xb4); //SDOUT1
     i2cfail += Wire.endTransmission(true);
 
     Wire.beginTransmission(cs8422);
     Wire.write(Serial_Audio_Output2_Data_Format);
-    Wire.write(0x84); //SDOUT2
+    Wire.write(0xb4); //SDOUT2
     i2cfail += Wire.endTransmission(true);
 
     Wire.beginTransmission(cs8422);
@@ -77,14 +83,19 @@ void cs8422_init()
     Wire.write(0x03); //Interrept
     i2cfail += Wire.endTransmission(true);
 
-    Wire.beginTransmission(cs8422);
-    Wire.write(Receiver_Error_Unmasking);
-    Wire.write(0x00); //Interrept屏蔽所有错误
-    i2cfail += Wire.endTransmission(true);
+    // // Wire.beginTransmission(cs8422);
+    // Wire.write(Receiver_Error_Unmasking);
+    // Wire.write(0x00); //Interrept屏蔽所有错误
+    // i2cfail += Wire.endTransmission(true);
+
+    // Wire.beginTransmission(cs8422);
+    // Wire.write(Interrupt_Unmasking);
+    // Wire.write(0x01); //
+    // i2cfail += Wire.endTransmission(true);
 
     // Wire.beginTransmission(cs8422);
     // Wire.write(Interrupt_Mode);
-    // Wire.write(0x00); //Interrept mode  Falling edge active
+    // Wire.write(0x01); //Interrept mode  Falling edge active
     // i2cfail += Wire.endTransmission(true);
 
     Wire.beginTransmission(cs8422);
@@ -97,18 +108,49 @@ void select_input(uint8_t ss)
     if (ss < 4)
     {
         Wire.beginTransmission(cs8422);
+        Wire.write(Clock_Control); //PDN 0
+        Wire.write(0x24);
+        i2cfail += Wire.endTransmission(true);
+
+        Wire.beginTransmission(cs8422);
         Wire.write(Data_Routing_Control);
-        Wire.write(0x02); //0 - Serial Audio Input Port (SDIN)  1 - AES3 Receiver Output
+        Wire.write(0x02); //1 - Serial Audio Input Port (SDIN)  1 - AES3 Receiver Output
+        i2cfail += Wire.endTransmission(true);
+
+        Wire.beginTransmission(cs8422);
+        Wire.write(Receiver_Data_Control);
+        Wire.write(0x0c);
         i2cfail += Wire.endTransmission(true);
 
         Wire.beginTransmission(cs8422);
         Wire.write(Receiver_Input_Control);
+
         Wire.write((ss << 5) | 0x84); // i2s in 24bit
         i2cfail += Wire.endTransmission(true);
         //Serial.printf("Receiver_Input_Control:0x%02X", (ss << 5) | 0x84);
     }
     else if (ss == 4)
     {
+        Wire.beginTransmission(cs8422);
+        Wire.write(Clock_Control); //PDN 0
+        Wire.write(0x2C);
+        i2cfail += Wire.endTransmission(true);
+
+        Wire.beginTransmission(cs8422);
+        Wire.write(Serial_Audio_Input_Clock_Control);
+        Wire.write(0x00); //ILRCK=MCLK/64 SAI MCLK=RMCK
+        i2cfail += Wire.endTransmission(true);
+
+        Wire.beginTransmission(cs8422);
+        Wire.write(SRC_Output_Serial_Port_Clock);
+        Wire.write(0x00); // SRC MCLK 使用内部晶振  SAO MCLK RMCLK OLRCK=MCLK/64
+        i2cfail += Wire.endTransmission(true);
+
+        Wire.beginTransmission(cs8422);
+        Wire.write(Recovered_Master_Clock);
+        Wire.write(0x08); // RMCLK= 64xFsi softmute on
+        i2cfail += Wire.endTransmission(true);
+
         Wire.beginTransmission(cs8422);
         Wire.write(Data_Routing_Control);
         Wire.write(0x00); //0 - Serial Audio Input Port (SDIN)  1 - AES3 Receiver Output
@@ -118,6 +160,14 @@ void select_input(uint8_t ss)
     {
         return;
     }
+}
+void set_cs8422(uint8_t reg, uint8_t data)
+{
+    Wire.beginTransmission(cs8422);
+    Wire.write(reg);
+    Wire.write(data);
+    i2cfail += Wire.endTransmission(true);
+    Serial.println("OK");
 }
 uint8_t get_cs8422_status(uint8_t reg)
 {

@@ -138,3 +138,16 @@ uint8_t get_lock_status()
     }
     return data;
 }
+uint8_t get_FS_status()
+{
+    uint8_t data = 0;
+    Wire.beginTransmission(pcm5122);
+    Wire.write(reg91);
+    Wire.endTransmission();
+    Wire.requestFrom(pcm5122, 1);
+    if (Wire.available() > 0)
+    {
+        data = Wire.read();
+    }
+    return data;
+}

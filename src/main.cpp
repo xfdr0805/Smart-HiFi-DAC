@@ -37,7 +37,7 @@
 #define DEBUG_PRINT(...)
 #endif
 
-const char *ssid = "shengji3";
+const char *ssid = "Luxul1750_2.4G";
 const char *password = "sonavox168";
 static WiFiEventHandler e1, e2, e3;
 WiFiClient espClient;
@@ -49,7 +49,6 @@ Rotary encoder = Rotary(12, 13);
 //full framebuffer, size = 1024 bytes  6 pages * 128 bytes
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 Button2 push_button = Button2(ENCODER_BTN);
-//IRrecv irrecv(IR_RCV_PIN);
 const uint32_t kBaudRate = 115200;
 const uint16_t kCaptureBufferSize = 1024;
 const uint8_t kTimeout = 50;
@@ -80,7 +79,10 @@ uint8_t coax1_code = 0x17;
 uint8_t coax2_code = 0x40;
 uint8_t bt_code = 0x04;
 uint8_t mute_code = 0x04;
-String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "I2S IN", "SmartConfig", "IR Decode", "Device Info", "About", "Exit"};
+#define PIO1_VOL_UP 15
+#define PIO7_VOL_DOWN 16
+#define PIO8_PLAY 2
+String menu[] = {"Optical-1", "Optical-2", "Coaxial-1", "Coaxial-2", "Bluetooth", "SmartConfig", "IR Decode", "Device Info", "About", "Exit"};
 DynamicJsonBuffer jsonBuffer;
 void onSTAConnected(WiFiEventStationModeConnected ipInfo)
 {
@@ -294,11 +296,12 @@ void handler_key(Button2 &btn)
     page_index++;
     if (page_index == 2) //按一下进入菜单，再按一下退出菜单
     {
-      if (input_index <= 4) //前边5路信号源
+      if (input_index < 5) //前边5路信号源
       {
         page_index = 0; //Main Page
         last_index = input_index;
         select_input(last_index);
+        Serial.printf("select input index:%d\r\n", last_index);
       }
       else if (input_index == 5)
       {
@@ -336,12 +339,19 @@ void handler_key(Button2 &btn)
   case LONG_CLICK:
 
     Serial.print("-----long click------\n");
-    smart_config();
+    //smart_config();
+    printf("CS8422 get_format_status:0x%X\n", get_format_status());
+    printf("CS8422 get_error_status:0x%X\n", get_error_status());
+    printf("CS8422 get_pll_status:0x%X\n", get_pll_status());
+    printf("CS8422 get_interrupt_status:0x%X\n", get_interrupt_status());
+    printf("CS8422 get_receiver_status:0x%X\n", get_receiver_status());
+    printf("pcm5121 get_FS_status():0x%X\n", get_FS_status());
     break;
   }
   draw_page(page_index);
 }
-void IntCallback()
+//2019.11.15 这里要加上ICACHE_RAM_ATTR  否则 提示ISR IS NOT RAM
+void ICACHE_RAM_ATTR IntCallback()
 {
   // printf("CS8422 Format Status:0x%X\n", get_format_status());
   // printf("CS8422 PLL Status:0x%X\n", get_pll_status());
@@ -350,7 +360,8 @@ void IntCallback()
   // printf("CS8422 Interrupt Status:0x%X\r\n", get_interrupt_status());
   if (page_index == 0)
   {
-    draw_page(page_index);
+    u8g2.setCursor(86, 14);
+    u8g2.print(get_receiver_status() & 0x10 ? "locked" : "nolock");
   }
 }
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -446,13 +457,21 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 void setup()
 {
   Serial.begin(115200);
+  Serial.setTimeout(1);
+  DEBUG_PRINT("Compiled DateTime: %s %s\n", __DATE__, __TIME__);
   pinMode(CS8422_INT_PIN, INPUT_PULLUP);
   pinMode(CS8422_RST_PIN, OUTPUT);
   pinMode(LED_BUILD, OUTPUT);
   pinMode(16, OUTPUT);
   pinMode(15, OUTPUT);
-  digitalWrite(16, 1);
-  digitalWrite(15, 1);
+  pinMode(2, OUTPUT);
+  // digitalWrite(2, 0);
+  // digitalWrite(16, 0);
+  // digitalWrite(15, 0);
+  // delay(5000);
+  // digitalWrite(16, 1);
+  // digitalWrite(15, 1);
+  // digitalWrite(2, 0);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   long lastMsg = millis();
@@ -468,12 +487,15 @@ void setup()
     }
   }
   //WiFi.begin();
+  e1 = WiFi.onStationModeGotIP(onSTAGotIP); // As soon WiFi is connected, start NTP Client
+  e2 = WiFi.onStationModeDisconnected(onSTADisconnected);
+  e3 = WiFi.onStationModeConnected(onSTAConnected);
   Serial.print("\nConnecting WiFi...\n");
   mac = WiFi.macAddress();
   //mac.replace(":", "");                //去掉：号
   mac.toLowerCase(); //转为小写
   DEBUG_PRINT("Mac Address:%s\n", mac.c_str());
-  DEBUG_PRINT("Compiled DateTime: %s %s\n", __DATE__, __TIME__);
+
   //irrecv.enableIRIn(); // Start the receiver
   //https://www.jianshu.com/p/014bcae94c8b
   //https://github.com/pellepl/spiffs/wiki/Using-spiffs
@@ -572,7 +594,7 @@ void setup()
   draw_page(0);
   push_button.setClickHandler(handler_key);
   push_button.setLongClickHandler(handler_key);
-  attachInterrupt(digitalPinToInterrupt(CS8422_INT_PIN), IntCallback, RISING);
+  attachInterrupt(digitalPinToInterrupt(CS8422_INT_PIN), IntCallback, FALLING);
   irrecv.enableIRIn(); // Start the receiver
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("info.html").setAuthentication("admin", "admin");
   //server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html").setAuthentication("admin", "admin");
@@ -748,17 +770,26 @@ void setup()
   // attach AsyncEventSource
   server.addHandler(&events);
   server.begin();
-  pcm5121_init();
-  set_pcm5121_volume(50, 50);
+
   digitalWrite(CS8422_RST_PIN, 0);
-  delay(100);
+  delay(500);
   digitalWrite(CS8422_RST_PIN, 1);
-  delay(100);
+  delay(500);
   cs8422_init();
   printf("CS8422 Chip ID:0x%X\n", get_cs8422_id());
+  pcm5121_init();
+  set_pcm5121_volume(50, 50);
 }
+uint8_t buffer[16];
 void loop()
 {
+
+  if (Serial.available() > 0)
+  {
+    memset(buffer, 0, 16);
+    Serial.readBytes(buffer, 16);
+    set_cs8422(buffer[0], buffer[1]);
+  }
   unsigned char dir = encoder.process();
   if (dir) //DIR_NONE
   {
@@ -864,6 +895,7 @@ void loop()
         input_index = 0;
       }
       last_index = input_index;
+      DEBUG_PRINT("select input index:%d\r\n", last_index);
       select_input(last_index);
     }
     else if (command == opt1_code)
